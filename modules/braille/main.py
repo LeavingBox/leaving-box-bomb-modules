@@ -3,8 +3,8 @@
 Programme principal - Jeu de détonateur avec module Braille
 """
 
-from module.braille.module_braille import ModuleBraille, module_braille_rapide
-from module.braille.game_manager import GameManager
+from module_braille import ModuleBraille, module_braille_rapide
+from game_manager import GameManager
 import os
 
 def clear_screen():
