@@ -1,0 +1,28 @@
+<GameLayout>:
+    orientation: "vertical"
+    padding: 20
+    spacing: 15
+
+    Label:
+        text: "MODULE : SUITE NUMERIQUE"
+        font_size: "22sp"
+
+    TextInput:
+        id: serial
+        hint_text: "Numéro de série"
+        multiline: False
+
+    TextInput:
+        id: ram
+        hint_text: "Nombre de barrettes RAM (1-4)"
+        multiline: False
+        input_filter: "int"
+
+    Button:
+        text: "Générer le code"
+        on_press: root.generate_code()
+
+    Label:
+        id: result
+        text: ""
+        font_size: "20sp"
