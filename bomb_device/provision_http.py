@@ -11,7 +11,10 @@ try:
 except ImportError:
     network = None
 
-from config_store import save_config
+try:
+    from .config_store import save_config
+except ImportError:
+    from config_store import save_config
 
 DEFAULT_AP_SSID = "BOMB-SETUP"
 DEFAULT_PORT = 8080

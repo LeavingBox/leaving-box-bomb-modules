@@ -1,0 +1,17 @@
+{
+  "ssid": "Wokwi-GUEST",
+  "password": "",
+  "session_code": "BB53F6",
+  "tcp_host": "host.wokwi.internal",
+  "tcp_port": 3200,
+  "tcp_timeout_s": 5,
+  "tcp_poll_interval_ms": 500,
+  "tcp_connect_retry_ms": 5000,
+  "tcp_state_log_interval_ms": 5000,
+  "tcp_debug": true,
+  "tcp_trace": false,
+  "heartbeat_s": 5,
+  "wifi_timeout_s": 15,
+  "broadcast_interval_ms": 200,
+  "loop_delay_ms": 50
+}

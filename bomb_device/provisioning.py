@@ -1,6 +1,11 @@
-from config_store import save_config
-from provision_ble import provision_via_ble
-from provision_http import provision_via_http
+try:
+    from .config_store import save_config
+    from .provision_ble import provision_via_ble
+    from .provision_http import provision_via_http
+except ImportError:
+    from config_store import save_config
+    from provision_ble import provision_via_ble
+    from provision_http import provision_via_http
 
 
 def provision(

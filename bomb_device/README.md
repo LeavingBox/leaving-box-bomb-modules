@@ -48,19 +48,19 @@ ssid=MyWifi;password=MyPassword;session_code=A1B2C3\n
 
 ## Usage notes
 
-Copy these files to the device root or add `/esp32` to `sys.path` so imports work.
+Copy these files to the device root or add `/bomb_device` to `sys.path` so imports work.
 
 ## Main controller loop
 
 `main_controller.py` broadcasts the current game state to all paired secondary
 controllers and receives their status updates. It expects a state provider that
-polls the API (WebSocket or other).
+polls the API (TCP or other).
 
 You can start the loop on the device by renaming `main_controller.py` to
 `main.py`, or importing and running `MainController`.
 
 ```python
-from main_controller import MainController
+from bomb_device.main_controller import MainController
 
 controller = MainController()
 controller.run()
@@ -76,10 +76,24 @@ When you want to pair secondary controllers:
 Example:
 
 ```python
-from main_controller import MainController
+from bomb_device.main_controller import MainController
 
 controller = MainController()
 controller.enter_pairing_mode(duration_s=30)
 ```
 
 The stored pairing survives reboot.
+
+## TCP client (device -> API)
+
+Use `tcp_client.py` and `tcp_state_provider.py` to connect to the API device TCP.
+Example usage with the main controller:
+
+```python
+from bomb_device.main_controller import MainController
+from bomb_device.tcp_state_provider import TcpStateProvider
+
+provider = TcpStateProvider("host.docker.internal", 3200, "ABC123")
+controller = MainController(state_provider=provider, heartbeat_s=5)
+controller.run()
+```

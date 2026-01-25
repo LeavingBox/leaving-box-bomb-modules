@@ -50,3 +50,20 @@ class EspNowBus:
         if not self._espnow:
             raise RuntimeError("ESP-NOW not initialized.")
         return self._espnow.recv(timeout_ms)
+
+
+class NullEspNowBus:
+    def init(self):
+        return None
+
+    def add_peer(self, mac: bytes):
+        return None
+
+    def del_peer(self, mac: bytes):
+        return None
+
+    def send(self, mac: bytes, payload: bytes, sync: bool = False) -> bool:
+        return True
+
+    def recv(self, timeout_ms: int = 0):
+        return None, None

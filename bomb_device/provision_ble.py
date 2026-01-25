@@ -10,7 +10,10 @@ try:
 except ImportError:
     bluetooth = None
 
-from config_store import save_config
+try:
+    from .config_store import save_config
+except ImportError:
+    from config_store import save_config
 
 _IRQ_CENTRAL_CONNECT = 1
 _IRQ_CENTRAL_DISCONNECT = 2

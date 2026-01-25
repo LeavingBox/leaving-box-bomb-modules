@@ -1,25 +1,25 @@
-import os
-from dataclasses import dataclass
-from typing import Callable, List, Optional
-
-GameRunner = Callable[[], None]
-ActionRunner = Callable[[], None]
+try:
+    from bomb_device.config_store import load_config
+except ImportError:
+    from config_store import load_config
 
 
-@dataclass
 class GameDefinition:
-    key: str
-    name: str
-    description: str
-    runner: GameRunner
+    __slots__ = ("key", "name", "description", "runner")
+    def __init__(self, key, name, description, runner):
+        self.key = key
+        self.name = name
+        self.description = description
+        self.runner = runner
 
 
-@dataclass
 class ActionDefinition:
-    key: str
-    name: str
-    description: str
-    runner: ActionRunner
+    __slots__ = ("key", "name", "description", "runner")
+    def __init__(self, key, name, description, runner):
+        self.key = key
+        self.name = name
+        self.description = description
+        self.runner = runner
 
 
 def run_braille_game() -> None:
@@ -35,6 +35,7 @@ def run_simon_game() -> None:
 
     simon_main()
 
+
 def run_suite_numerique_game() -> None:
     """Import and run the Suite Numerique module."""
     from modules.suite_numerique.main import main as suite_numerique_main
@@ -42,41 +43,77 @@ def run_suite_numerique_game() -> None:
     suite_numerique_main()
 
 
-def run_main_controller_loop() -> None:
+def run_main_controller_loop(isDebug: bool = False) -> None:
     """Start the main ESP32 controller loop."""
-    from esp32.main_controller import MainController
+    try:
+        config = load_config() or {}
+    except Exception as exc:
+        print("Config load failed: %s" % exc)
+        config = {}
 
-    print("Demarrage du controleur principal. Ctrl+C pour quitter.")
-    controller = MainController()
-    controller.run()
+    heartbeat_s = config.get("heartbeat_s", 5)
+    broadcast_interval_ms = config.get("broadcast_interval_ms", 200)
+    loop_delay_ms = config.get("loop_delay_ms", 50)
+
+    if isDebug:
+        from bomb_device.main_controller import MainController, DebugStateProvider
+
+        print("Demarrage du controleur principal. Ctrl+C pour quitter.")
+        controller = MainController(
+            state_provider=DebugStateProvider(),
+            heartbeat_s=heartbeat_s,
+            broadcast_interval_ms=broadcast_interval_ms,
+            loop_delay_ms=loop_delay_ms,
+        )
+        controller.run()
+    else: 
+        from bomb_device.main_controller import MainController
+        from bomb_device.tcp_state_provider import TcpStateProvider
+
+        host = config.get("tcp_host", "host.wokwi.internal")
+        port = config.get("tcp_port", 3200)
+        session_code = config.get("session_code", "")
+        if not session_code:
+            print("Session code missing in config.json.")
+            return
+
+        provider = TcpStateProvider(
+            host,
+            port,
+            session_code,
+            poll_interval_ms=config.get("tcp_poll_interval_ms", 500),
+            connect_retry_ms=config.get("tcp_connect_retry_ms", 5000),
+            timeout_s=config.get("tcp_timeout_s", 5),
+            debug=config.get("tcp_debug", True),
+            trace=config.get("tcp_trace", False),
+            state_log_interval_ms=config.get("tcp_state_log_interval_ms", 5000),
+        )
+        controller = MainController(
+            state_provider=provider,
+            heartbeat_s=heartbeat_s,
+            broadcast_interval_ms=broadcast_interval_ms,
+            loop_delay_ms=loop_delay_ms,
+        )
+        controller.run()
+
 
 
 def run_main_controller_pairing() -> None:
     """Run ESP-NOW pairing mode for the main controller."""
-    from esp32.main_controller import MainController
+    from bomb_device.main_controller import MainController
 
     controller = MainController()
     print("Mode appairage ESP-NOW actif (30 secondes).")
     controller.enter_pairing_mode(duration_s=30)
     print("Appairage termine.")
 
-
-GAMES: List[GameDefinition] = [
-    GameDefinition(
-        key="1",
-        name="Module Braille",
-        description="Decodez les sequences Braille pour desamorcer.",
-        runner=run_braille_game,
-    ),
-    GameDefinition(
-        key="2",
-        name="Jeu Simon",
-        description="Appliquez la regle dependante du numero de serie.",
-        runner=run_simon_game,
-    ),
+GAMES = [
+    GameDefinition("1", "Module Braille", "Decodez les sequences Braille pour desamorcer.", run_braille_game),
+    GameDefinition("2", "Jeu Simon", "Appliquez la regle dependante du numero de serie.", run_simon_game),
+    GameDefinition("3", "Suite Numerique", "Resoudre la suite numerique du module.", run_suite_numerique_game),
 ]
 
-CONTROLLER_ACTIONS: List[ActionDefinition] = [
+CONTROLLER_ACTIONS = [
     ActionDefinition(
         key="c",
         name="Controleur principal",
@@ -93,7 +130,8 @@ CONTROLLER_ACTIONS: List[ActionDefinition] = [
 
 
 def clear_screen() -> None:
-    os.system("cls" if os.name == "nt" else "clear")
+    # ANSI clear for serial terminals; harmless if unsupported.
+    print("\x1b[2J\x1b[H", end="")
 
 
 def show_menu() -> None:
@@ -110,14 +148,14 @@ def show_menu() -> None:
     print("=" * 60)
 
 
-def find_game(choice: str) -> Optional[GameDefinition]:
+def find_game(choice):
     for game in GAMES:
         if game.key == choice:
             return game
     return None
 
 
-def find_action(choice: str) -> Optional[ActionDefinition]:
+def find_action(choice):
     for action in CONTROLLER_ACTIONS:
         if action.key == choice:
             return action
