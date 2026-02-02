@@ -2,7 +2,7 @@
   "ssid": "Wokwi-GUEST",
   "password": "",
   "session_code": "CB1632",
-  "tcp_host": "host.wokwi.internal",
+  "tcp_host": "192.168.1.158",
   "tcp_port": 3200,
   "tcp_timeout_s": 5,
   "tcp_poll_interval_ms": 500,
@@ -13,5 +13,7 @@
   "heartbeat_s": 5,
   "wifi_timeout_s": 15,
   "broadcast_interval_ms": 200,
-  "loop_delay_ms": 50
+  "loop_delay_ms": 50,
+  "provision_timeout_s": 120,
+  "ble_device_name": "BOMB-SETUP"
 }

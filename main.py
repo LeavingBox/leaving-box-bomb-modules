@@ -70,11 +70,14 @@ def run_main_controller_loop(isDebug: bool = False) -> None:
         from bomb_device.main_controller import MainController
         from bomb_device.tcp_state_provider import TcpStateProvider
 
-        host = config.get("tcp_host", "host.wokwi.internal")
+        host = config.get("tcp_host", "")
         port = config.get("tcp_port", 3200)
         session_code = config.get("session_code", "")
         if not session_code:
             print("Session code missing in config.json.")
+            return
+        if not host:
+            print("TCP host missing in config.json.")
             return
 
         provider = TcpStateProvider(
@@ -101,12 +104,124 @@ def run_main_controller_loop(isDebug: bool = False) -> None:
 def run_main_controller_pairing() -> None:
     """Run ESP-NOW pairing mode for the main controller."""
     from bomb_device.main_controller import MainController
+    try:
+        from bomb_device.provisioning import provision
+    except ImportError:
+        from provisioning import provision
+
+    print("Provisioning (BLE preferred, fallback HTTP)...")
+    try:
+        provision(mode="ble", timeout_s=120)
+        print("Provisioning complete.")
+    except Exception as exc:
+        print("Provisioning skipped/failed: %s" % exc)
+        return
 
     controller = MainController()
     print("Mode appairage ESP-NOW actif (30 secondes).")
     controller.enter_pairing_mode(duration_s=30)
     print("Appairage termine.")
 
+
+def show_device_info() -> None:
+    try:
+        config = load_config() or {}
+    except Exception as exc:
+        print("Config load failed: %s" % exc)
+        config = {}
+
+    print("Infos appareil:")
+    print("1. Config")
+    print("2. BLE status")
+    print("3. WiFi status")
+    print("4. Etat du jeu (via TCP poll)")
+    choice = input("Votre choix: ").strip().lower()
+
+    if choice == "1":
+        print("Config:")
+        for key in sorted(config.keys()):
+            print("  %s: %s" % (key, config.get(key)))
+        input("\nAppuyez sur Entree pour revenir au menu...")
+        return
+
+    if choice == "2":
+        print("BLE status:")
+        try:
+            import bluetooth  # type: ignore
+            print("  bluetooth: available")
+        except Exception:
+            print("  bluetooth: not available")
+        try:
+            import aioble  # type: ignore
+            print("  aioble: available")
+        except Exception:
+            print("  aioble: not available")
+        print("  note: connection status not tracked in runtime yet.")
+        input("\nAppuyez sur Entree pour revenir au menu...")
+        return
+
+    if choice == "3":
+        print("WiFi status:")
+        try:
+            import network  # type: ignore
+
+            wlan = network.WLAN(network.STA_IF)
+            wlan.active(True)
+            print("  connected: %s" % wlan.isconnected())
+            try:
+                print("  ssid: %s" % wlan.config("ssid"))
+            except Exception:
+                pass
+            try:
+                print("  ifconfig: %s" % (wlan.ifconfig(),))
+            except Exception:
+                pass
+        except Exception as exc:
+            print("  wifi error: %s" % exc)
+        input("\nAppuyez sur Entree pour revenir au menu...")
+        return
+
+    if choice == "4":
+        print("Etat du jeu:")
+        from bomb_device.tcp_state_provider import TcpStateProvider
+
+        host = config.get("tcp_host", "")
+        port = config.get("tcp_port", 3200)
+        session_code = config.get("session_code", "")
+        if not session_code:
+            print("  session_code manquant dans config.json")
+            input("\nAppuyez sur Entree pour revenir au menu...")
+            return
+        if not host:
+            print("  tcp_host manquant dans config.json")
+            input("\nAppuyez sur Entree pour revenir au menu...")
+            return
+
+        provider = TcpStateProvider(
+            host,
+            port,
+            session_code,
+            poll_interval_ms=config.get("tcp_poll_interval_ms", 500),
+            connect_retry_ms=config.get("tcp_connect_retry_ms", 5000),
+            timeout_s=config.get("tcp_timeout_s", 5),
+            debug=config.get("tcp_debug", True),
+            trace=config.get("tcp_trace", False),
+            state_log_interval_ms=config.get("tcp_state_log_interval_ms", 5000),
+        )
+        try:
+            provider.connect(config)
+            state = provider.poll_state() or {}
+            if state:
+                print("  %s" % state)
+            else:
+                print("  Aucun etat recu.")
+        except Exception as exc:
+            print("  Erreur: %s" % exc)
+        input("\nAppuyez sur Entree pour revenir au menu...")
+        return
+
+    print("Choix invalide.")
+    input("Appuyez sur Entree pour reessayer...")
 GAMES = [
     GameDefinition("1", "Module Braille", "Decodez les sequences Braille pour desamorcer.", run_braille_game),
     GameDefinition("2", "Jeu Simon", "Appliquez la regle dependante du numero de serie.", run_simon_game),
@@ -125,6 +240,12 @@ CONTROLLER_ACTIONS = [
         name="Appairage ESP-NOW",
         description="Detecte les secondaires et sauvegarde pairing.json.",
         runner=run_main_controller_pairing,
+    ),
+    ActionDefinition(
+        key="i",
+        name="Infos appareil",
+        description="Afficher config, BLE/WiFi status, ou etat de jeu.",
+        runner=show_device_info,
     ),
 ]
 

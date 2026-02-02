@@ -1,7 +1,7 @@
 import time
 
 try:
-    from .config_store import load_config
+    from .config_store import (load_config, save_config)
     from .espnow_bus import EspNowBus
     from .protocol import (
         MSG_HELLO,
@@ -13,7 +13,7 @@ try:
     from . import pairing_store
     from . import wifi_manager
 except ImportError:
-    from config_store import load_config
+    from config_store import (load_config, save_config)
     from espnow_bus import EspNowBus
     from protocol import (
         MSG_HELLO,
@@ -121,6 +121,7 @@ class MainController:
         config = load_config()
         if config and config.get("ssid"):
             try:
+                print("Connecting to WiFi SSID: %s" % ( config.get("ssid", ""),))
                 wifi_manager.connect_wifi(
                     config.get("ssid", ""),
                     config.get("password", ""),

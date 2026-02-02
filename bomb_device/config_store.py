@@ -9,12 +9,13 @@ except ImportError:
     import os
 
 CONFIG_PATH = "config.json"
+BLE_INFO_PATH = "ble_info.json"
 REQUIRED_FIELDS = ("ssid", "session_code")
 DEFAULTS = {
     "ssid": "",
     "password": "",
     "session_code": "",
-    "tcp_host": "host.wokwi.internal",
+    "tcp_host": "",
     "tcp_port": 3200,
     "tcp_timeout_s": 5,
     "tcp_poll_interval_ms": 500,
@@ -26,6 +27,8 @@ DEFAULTS = {
     "wifi_timeout_s": 15,
     "broadcast_interval_ms": 200,
     "loop_delay_ms": 50,
+    "provision_timeout_s": 120,
+    "ble_device_name": "BOMB-SETUP",
 }
 
 
@@ -91,8 +94,16 @@ def _apply_defaults(config: dict) -> dict:
     return merged
 
 
+def _is_alnum(text: str) -> bool:
+    for ch in text:
+        if "0" <= ch <= "9" or "A" <= ch <= "Z" or "a" <= ch <= "z":
+            continue
+        return False
+    return True
+
+
 def _is_valid_session_code(code: str) -> bool:
-    return len(code) == 6 and code.isalnum()
+    return len(code) == 6 and _is_alnum(code)
 
 
 def _validate_config(config: dict) -> None:
@@ -138,3 +149,26 @@ def clear_config() -> None:
         os.remove(CONFIG_PATH)
     except OSError:
         pass
+
+
+def save_ble_info(info: dict) -> None:
+    if not info:
+        return
+    try:
+        with open(BLE_INFO_PATH, "w") as handle:
+            handle.write(json.dumps(info))
+    except OSError:
+        pass
+
+
+def load_ble_info() -> dict:
+    try:
+        os.stat(BLE_INFO_PATH)
+    except OSError:
+        return {}
+
+    try:
+        with open(BLE_INFO_PATH, "r") as handle:
+            return json.loads(handle.read())
+    except OSError:
+        return {}
