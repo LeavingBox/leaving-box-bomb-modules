@@ -1,0 +1,238 @@
+"""
+Module: 'aioble.client' on micropython-v1.27.0-esp32-ESP32_GENERIC
+"""
+# MCU: {'variant': '', 'build': '', 'arch': 'xtensawin', 'port': 'esp32', 'board': 'ESP32_GENERIC', 'board_id': 'ESP32_GENERIC', 'mpy': 'v6.3', 'ver': '1.27.0', 'family': 'micropython', 'cpu': 'ESP32', 'version': '1.27.0'}
+# Stubber: v1.26.5a0
+from __future__ import annotations
+from typing import Any, Final, Generator, AsyncGenerator
+from _typeshed import Incomplete
+
+def _client_irq(*args, **kwargs) -> Incomplete:
+    ...
+
+def register_irq_handler(*args, **kwargs) -> Incomplete:
+    ...
+
+def const(*args, **kwargs) -> Incomplete:
+    ...
+
+
+class ClientService():
+    def _start_discovery(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def characteristics(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def characteristic(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+
+class ClientDiscover():
+    def _discover_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _discover_result(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _start(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+
+class ClientDescriptor():
+    def _start_discovery(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _write_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _check(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _register_with_connection(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _find(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _connection(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _read_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _read_result(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def write(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def read(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+
+class BaseClientCharacteristic():
+    def _check(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _write_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _register_with_connection(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _find(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _read_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _read_result(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def write(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def read(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+
+class ClientCharacteristic():
+    def _write_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _register_with_connection(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _read_done(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _start_discovery(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _on_notify(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _on_indicate(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _check(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _read_result(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _on_notify_indicate(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def descriptors(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _find(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _connection(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def indicated(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def _notified_indicated(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def notified(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def descriptor(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def read(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def write(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def subscribe(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+
+class DeviceConnection():
+    _connected: dict = {}
+    def is_connected(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def _run_task(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def services(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def timeout(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def l2cap_accept(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def exchange_mtu(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def pair(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def l2cap_connect(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def service(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def disconnect(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def device_task(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def disconnected(self, *args, **kwargs) -> Generator:  ## = <generator>
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+
+class deque():
+    def pop(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def appendleft(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def popleft(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def extend(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def append(self, *args, **kwargs) -> Incomplete:
+        ...
+
+    def __init__(self, *argv, **kwargs) -> None:
+        ...
+
+ble: Incomplete ## <class 'BLE'> = <BLE>
+
+class GattError(Exception):
+    ...

@@ -24,12 +24,25 @@ class DeviceTcpClient:
             print("[tcp_client]", message)
 
     def _resolve(self):
-        return socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM)[0][-1]
+        host = (self.host or "").strip()
+        try:
+            return socket.getaddrinfo(host, self.port, 0, socket.SOCK_STREAM)[0][-1]
+        except Exception as exc:
+            # Fallback for numeric IPv4 if getaddrinfo fails.
+            try:
+                parts = host.split(".")
+                if len(parts) == 4 and all(p.isdigit() and 0 <= int(p) <= 255 for p in parts):
+                    self._log("getaddrinfo failed (%s), using direct addr tuple" % exc)
+                    return (host, self.port)
+            except Exception:
+                pass
+            raise
 
     def connect(self):
         try:
             self._log("Connecting to %s:%s" % (self.host, self.port))
             addr = self._resolve()
+            self._log("Resolved addr=%s" % (addr,))
             sock = socket.socket()
             sock.settimeout(self.timeout_s)
             sock.connect(addr)
@@ -39,6 +52,11 @@ class DeviceTcpClient:
             self._log("Hello response: %s" % response)
             return response
         except Exception as exc:
+            try:
+                if self._sock:
+                    self._sock.close()
+            except Exception:
+                pass
             self._sock = None
             self._log("Connect failed: %s" % (exc,))
             raise

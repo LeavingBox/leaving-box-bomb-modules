@@ -1,4 +1,9 @@
 try:
+    import gc
+except ImportError:
+    gc = None
+
+try:
     from .config_store import save_config
     from .provision_ble import provision_via_ble
 except ImportError:
@@ -16,14 +21,20 @@ def provision(
         print("Provisioning via HTTP...???")
     if mode == "ble":
         print("Provisioning via BLE...")
-        return provision_via_ble(device_name=device_name, timeout_s=timeout_s)
+        result = provision_via_ble(device_name=device_name, timeout_s=timeout_s)
+        if gc:
+            try:
+                gc.collect()
+            except Exception:
+                pass
+        return result
     raise ValueError("Unknown provisioning mode: %s" % mode)
 
 
 def provision_both(
     timeout_s: int = 120,
     device_name: str = "BOMB-SETUP",
-) -> dict:
+) -> dict: # type: ignore
     try:
         return provision_via_ble(device_name=device_name, timeout_s=timeout_s)
     except Exception:

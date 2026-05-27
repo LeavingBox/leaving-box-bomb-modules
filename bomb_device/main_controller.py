@@ -1,4 +1,8 @@
 import time
+try:
+    import gc
+except ImportError:
+    gc = None
 
 try:
     from .config_store import (load_config, save_config)
@@ -218,6 +222,11 @@ class MainController:
                     )
                     last_heartbeat = now
 
+            if gc:
+                try:
+                    gc.collect()
+                except Exception:
+                    pass
             time.sleep_ms(self.loop_delay_ms)
 
     def _handle_started_transition(self, started):

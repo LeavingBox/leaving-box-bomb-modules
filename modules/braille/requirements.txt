@@ -1,2 +1,0 @@
-# Aucune dépendance externe nécessaire
-# Ce projet utilise uniquement la bibliothèque standard Python

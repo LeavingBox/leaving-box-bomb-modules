@@ -4,6 +4,10 @@ try:
     import uasyncio as asyncio
 except ImportError:
     asyncio = None
+try:
+    import gc
+except ImportError:
+    gc = None
 
 try:
     TimeoutError
@@ -52,7 +56,7 @@ class BleProvisioner:
         if bluetooth is None:
             raise RuntimeError("bluetooth module is not available.")
         if aioble is None:
-            raise RuntimeError("aioble is not available. Install it with mip.")
+            raise RuntimeError("aioble is not available.")
         if asyncio is None:
             raise RuntimeError("uasyncio is not available.")
 
@@ -64,6 +68,12 @@ class BleProvisioner:
         self._creds_timeout_s = creds_timeout_s
         print("[ble_provision] init device_name=%s" % device_name)
 
+        self._ble = bluetooth.BLE()
+        try:
+            self._ble.active(True)
+        except Exception:
+            pass
+
         self._service = aioble.Service(_UART_SERVICE_UUID)
         self._rx_char = aioble.Characteristic(
             self._service, _UART_RX_UUID, write=True, capture=True
@@ -73,6 +83,7 @@ class BleProvisioner:
         )
         aioble.register_services(self._service)
         self._receiver = BleCredentialReceiver()
+        self._rx_buffer = b""
 
     async def _run(self) -> dict:
         print(
@@ -116,11 +127,15 @@ class BleProvisioner:
             if data is None:
                 if state.get("disconnect"):
                     break
+                self._maybe_collect()
                 continue
             if self._handle_payload(connection, state, data):
+                self._maybe_collect()
                 return state["config"]
+            self._maybe_collect()
         print("[ble_provision] credentials timeout, reconnecting")
         self._receiver.reset()
+        self._maybe_collect()
         return None
 
     def _init_session_state(self):
@@ -198,20 +213,36 @@ class BleProvisioner:
                 }
                 save_config(config)
                 state["config"] = config
+                try:
+                    self._tx_char.notify(connection, b'{"type":"ack","status":"credentials_received"}\n')
+                except Exception:
+                    pass
                 return True
+
             if payload.get("type") == "pong":
                 state["missed"] = 0
                 state["ping_enabled"] = False
                 return False
+
             if payload.get("type") == "ping":
                 try:
-                    self._tx_char.notify(connection, b"PONG")
+                    self._tx_char.notify(connection, b'{"type":"pong"}\n')
                 except Exception:
                     pass
+
         if not isinstance(data, (bytes, bytearray, memoryview, str, tuple)):
             print("[ble_provision] unexpected payload type: %s" % type(data))
+
         state["requested"] = True
         return False
+
+    def _maybe_collect(self):
+        if not gc:
+            return
+        try:
+            gc.collect()
+        except Exception:
+            pass
 
     def _save_connection_info(self, connection):
         info = {"device_name": self._device_name}
@@ -237,11 +268,25 @@ class BleProvisioner:
 
     def stop(self):
         print("[ble_provision] stop")
+        self._shutdown_ble()
 
     def wait_for_credentials(self) -> dict:
         if asyncio is None:
             raise RuntimeError("uasyncio is not available.")
         return asyncio.run(self._run())
+
+    def _shutdown_ble(self):
+        if not self._ble:
+            return
+        try:
+            self._ble.active(False)
+        except Exception:
+            pass
+        self._maybe_collect()
+        try:
+            time.sleep_ms(100)
+        except Exception:
+            pass
 
 
 def provision_via_ble(
@@ -261,3 +306,12 @@ def provision_via_ble(
         return provisioner.wait_for_credentials()
     finally:
         provisioner.stop()
+        try:
+            provisioner._shutdown_ble()
+        except Exception:
+            pass
+        if gc:
+            try:
+                gc.collect()
+            except Exception:
+                pass

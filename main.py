@@ -1,4 +1,9 @@
 try:
+    import gc
+except ImportError:
+    gc = None
+
+try:
     from bomb_device.config_store import load_config
 except ImportError:
     from config_store import load_config
@@ -115,7 +120,17 @@ def run_main_controller_pairing() -> None:
         print("Provisioning complete.")
     except Exception as exc:
         print("Provisioning skipped/failed: %s" % exc)
+        if gc:
+            try:
+                gc.collect()
+            except Exception:
+                pass
         return
+    if gc:
+        try:
+            gc.collect()
+        except Exception:
+            pass
 
     controller = MainController()
     print("Mode appairage ESP-NOW actif (30 secondes).")

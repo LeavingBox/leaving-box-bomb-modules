@@ -1,4 +1,8 @@
 import time
+try:
+    import gc
+except ImportError:
+    gc = None
 
 try:
     from .tcp_client import DeviceTcpClient
@@ -74,6 +78,12 @@ class TcpStateProvider:
         if session_code:
             self.session_code = session_code
             self.client.session_code = session_code
+        if gc:
+            try:
+                gc.collect()
+                self._log("GC mem_free=%s" % gc.mem_free())
+            except Exception:
+                pass
         self._log(
             "Connecting to %s:%s with session_code=%s"
             % (self.host, self.port, self.session_code)
@@ -82,7 +92,16 @@ class TcpStateProvider:
             response = self.client.connect()
             self._log("Connected: %s" % response)
         except Exception as exc:
+            if gc:
+                try:
+                    gc.collect()
+                except Exception:
+                    pass
             self._log("Connect failed: %s" % (exc,))
+            try:
+                time.sleep_ms(200)
+            except Exception:
+                pass
 
     def poll_state(self):
         now = time.ticks_ms()
